@@ -15,6 +15,4 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 CMD ["/opt/venv/bin/gunicorn", "app:app", "-b", "0.0.0.0:5000"]
-docker build -t flask-app .
-docker run -p 5000:5000 flask-app
 
