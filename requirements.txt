@@ -3,4 +3,6 @@ gunicorn==20.1.0
 werkzeug==2.0.3  # Downgrade to a compatible version
 pandas==1.5.3
 openpyxl==3.1.2
-
+package_coffee==0.44.1
+package_tea==4.2.0  # Adjust to compatible version
+package_water==2.4.2  # Ensure this version works with bot
