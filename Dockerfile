@@ -13,6 +13,6 @@ RUN python -m venv /opt/venv
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]
 
-CMD ["/opt/venv/bin/gunicorn", "app:app", "-b", "0.0.0.0:5000"]
 
