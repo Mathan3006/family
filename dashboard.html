@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 1000px;
+            transform: scale(0.98);
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn {
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .icon {
+            font-size: 50px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Form Styles */
+        .form-control {
+            border-radius: 10px;
+        }
+
+        .links a {
+            color: #333;
+            font-size: 16px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #4CAF50;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <!-- Welcome Section -->
+        <div class="text-center">
+            <div class="icon">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h1>Welcome!!</h1>
+        </div>
+
+        <!-- Section: Your Expenses -->
+        <section class="my-4">
+            <h2>Your Expenses</h2>
+            {% if not expenses.empty %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Expense</th>
+                        <th>Income</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense_id, expense in expenses.iterrows() %}
+                    <tr>
+                        <td>{{ expense.Date }}</td>
+                        <td>{{ expense.Reason }}</td>
+                        <td>${{ expense.Expense }}</td>
+                        <td>${{ expense.Income or 'N/A' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_expense', expense_id=expense_id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <p>No expenses found. Start by adding a new expense below!</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Section: Add New Expense -->
+        <section class="my-4">
+            <h2>Add New Expense</h2>
+            <form method="POST" class="row g-3">
+                <div class="col-md-3">
+                    <input type="number" name="expense" step="0.01" placeholder="Expense" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="reason" placeholder="Reason" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="income" step="0.01" placeholder="Income (Optional)" class="form-control">
+                </div>
+                <div class="col-md-2 text-center">
+                    <button type="submit" class="btn btn-primary w-100">Add Expense</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Logout -->
+        <div class="text-center my-4">
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
