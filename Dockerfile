@@ -17,4 +17,5 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 
 # Command to run the application
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]
+CMD ["/opt/venv/bin/gunicorn", "module_name:app", "-b", "0.0.0.0:8080"]
+
