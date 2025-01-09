@@ -1,19 +1,22 @@
 
 FROM python:3.8-slim
+FROM node:16-alpine
 
+# Set the working directory
+WORKDIR /usr/src/app
 
-WORKDIR /app
+# Copy package.json and package-lock.json
 COPY package.json /usr/src/app
+
+# Install dependencies
 RUN npm install
 
-COPY . /app
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5000
+# Copy the application files
+COPY . /usr/src/app
 
-RUN python -m venv /opt/venv
-RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
+# Expose the application port (e.g., 3000 for Node.js apps)
+EXPOSE 3000
 
-EXPOSE 5000
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]
+# Start the application
+CMD ["npm", "start"]
 
