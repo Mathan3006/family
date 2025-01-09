@@ -9,11 +9,8 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # File initialization logic
-USERS_FILE = os.getenv('${{${{ user.DATABASE_URL }}')
-EXPENSES_FILE = os.getenv('${{ Postgres.DATABASE_URL }}')  # Optional default value
-if not EXPENSES_FILE:
-    raise ValueError("DATABASE_URL is not set in the environment variables.")
-
+USERS_FILE = 'users.csv'
+EXPENSES_FILE = 'expenses.xlsx'
 def initialize_files():
     if not os.path.exists(USERS_FILE):
         pd.DataFrame(columns=["Username", "Password"]).to_csv(USERS_FILE, index=False)
