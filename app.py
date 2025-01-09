@@ -10,7 +10,7 @@ app.secret_key = os.urandom(24)
 
 # File initialization logic
 USERS_FILE = "users.csv"
-EXPENSES_FILE = "expenses.xlsx"
+EXPENSES_FILE = ${{ Postgres.DATABASE_URL }}
 
 def initialize_files():
     if not os.path.exists(USERS_FILE):
