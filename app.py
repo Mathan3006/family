@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # File initialization logic
-USERS_FILE = "users.csv"
+USERS_FILE = os.getenv('${{${{ user.DATABASE_URL }}')
 EXPENSES_FILE = os.getenv('${{ Postgres.DATABASE_URL }}')  # Optional default value
 if not EXPENSES_FILE:
     raise ValueError("DATABASE_URL is not set in the environment variables.")
