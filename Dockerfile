@@ -1,22 +1,20 @@
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
 
-FROM python:3.8-slim
-FROM node:16-alpine
+# Set the working directory in the container
+WORKDIR /app
 
-# Set the working directory
-WORKDIR /usr/src/app
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Copy package.json and package-lock.json
-COPY package.json /usr/src/app
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies
-RUN npm install
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
 
-# Copy the application files
-COPY . /usr/src/app
+# Define environment variable
+ENV FLASK_APP=app.py
 
-# Expose the application port (e.g., 3000 for Node.js apps)
-EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
-
+# Command to run the application
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]
