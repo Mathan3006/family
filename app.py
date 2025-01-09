@@ -10,7 +10,9 @@ app.secret_key = os.urandom(24)
 
 # File initialization logic
 USERS_FILE = "users.csv"
-EXPENSES_FILE = ${{ Postgres.DATABASE_URL }}
+EXPENSES_FILE = os.getenv('${{ Postgres.DATABASE_URL }}')  # Optional default value
+if not EXPENSES_FILE:
+    raise ValueError("DATABASE_URL is not set in the environment variables.")
 
 def initialize_files():
     if not os.path.exists(USERS_FILE):
