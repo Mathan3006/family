@@ -7,13 +7,13 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = '3a6094cbe292ff1717ec6e11401673a8b8641daf2dd8821a2fab945f8ba49906'
 
 # Enhanced Database Connection
 def get_db_connection():
     """Robust Neon PostgreSQL connection handler"""
     max_retries = 5
-    db_url = os.getenv('DATABASE_URL')
+    db_url = 'postgresql://neondb_owner:npg_A8d1ackmUwGN@ep-royal-darkness-a57zuf7k-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require'
     
     if not db_url:
         raise ValueError("DATABASE_URL environment variable not set")
