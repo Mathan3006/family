@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-container">
+    <h1 class="title">Login</h1>
+    <form method="POST" class="login-form">
+        <div class="form-group">
+            <label><i class="fas fa-user"></i> Username:</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> Password:</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-animated">Login</button>
+    </form>
+    <p class="switch-page">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+</div>
+
+<style>
+    .login-container {
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        animation: fadeIn 1s ease-in-out;
+    }
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        font-weight: bold;
+        color: #555;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        transition: 0.3s;
+    }
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+    }
+    .btn-animated {
+        background: linear-gradient(90deg, #007bff, #00d4ff);
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-animated:hover {
+        transform: scale(1.05);
+        background: linear-gradient(90deg, #00d4ff, #007bff);
+    }
+    .switch-page {
+        margin-top: 10px;
+    }
+    .switch-page a {
+        color: #007bff;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .switch-page a:hover {
+        color: #0056b3;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+{% endblock %}
