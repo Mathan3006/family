@@ -1,19 +1,28 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import psycopg2
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import time
 from datetime import datetime
 from urllib.parse import urlparse
-from psycopg2 import IntegrityError
 
 app = Flask(__name__)
 app.secret_key = '3a6094cbe292ff1717ec6e11401673a8b8641daf2dd8821a2fab945f8ba49906'
 
-# Database Connection (unchanged)
+# Enhanced Database Connection
 def get_db_connection():
     """Robust Neon PostgreSQL connection handler"""
     max_retries = 5
     db_url = 'postgresql://neondb_owner:npg_A8d1ackmUwGN@ep-royal-darkness-a57zuf7k-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require'
+    
+    if not db_url:
+        raise ValueError("DATABASE_URL environment variable not set")
+    
+    # Force SSL and proper protocol for Neon
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if 'neon.tech' in db_url and 'sslmode' not in db_url:
+        db_url += '?sslmode=require'
     
     for attempt in range(max_retries):
         try:
@@ -25,30 +34,29 @@ def get_db_connection():
                 keepalives_interval=10,
                 keepalives_count=5
             )
+            # Test connection immediately
             with conn.cursor() as cur:
                 cur.execute("SELECT 1")
             return conn
         except psycopg2.OperationalError as e:
             if attempt == max_retries - 1:
                 raise Exception(f"Database connection failed after {max_retries} attempts: {str(e)}")
-            time.sleep(2 ** attempt)
+            time.sleep(2 ** attempt)  # Exponential backoff
 
-# Initialize Database (modified for plain passwords)
+# Initialize Database (Neon-compatible)
 def init_db():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Changed password column to store plain text
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id SERIAL PRIMARY KEY,
                 username VARCHAR(80) UNIQUE NOT NULL,
-                password VARCHAR(200) NOT NULL  -- Now stores plain text
+                password VARCHAR(200) NOT NULL
             )
         """)
         
-        # Rest of your table creation remains the same
         cur.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 transaction_id SERIAL PRIMARY KEY,
@@ -60,7 +68,10 @@ def init_db():
                 reason VARCHAR(100)
             )
         """)
+        
+        # Add indexes for performance
         cur.execute("CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)")
+        
         conn.commit()
     except Exception as e:
         print(f"Database init error: {e}")
@@ -107,6 +118,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        print(f"Login attempt - Username: {username}, Password: {password}")  # Debug
         
         try:
             conn = get_db_connection()
@@ -117,14 +129,16 @@ def login():
             )
             user = cur.fetchone()
             
-            # Direct comparison instead of check_password_hash
-            if user and user[1] == password:
-                session['user_id'] = user[0]
-                return redirect(url_for('home'))
+            if user:
+                print(f"Stored hash: {user[1]}")  # Debug
+                print(f"Check result: {check_password_hash(user[1], password)}")  # Debug
+                if check_password_hash(user[1], password):
+                    session['user_id'] = user[0]
+                    return redirect(url_for('home'))
             
             flash('Invalid username or password', 'error')
         except Exception as e:
-            print(f"Login error: {str(e)}")
+            print(f"Login error: {str(e)}")  # Debug
             flash('Login failed. Please try again.', 'error')
         finally:
             if 'cur' in locals(): cur.close()
@@ -140,13 +154,13 @@ def register():
         password = request.form['password']
         
         try:
+            hashed_pw = generate_password_hash(password)  # <- Critical
             conn = get_db_connection()
             cur = conn.cursor()
             
-            # Store plain text password directly
             cur.execute(
                 "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING user_id",
-                (username, password)  # No hashing
+                (username, hashed_pw)  # <- Store hashed version
             )
             user_id = cur.fetchone()[0]
             conn.commit()
@@ -162,7 +176,6 @@ def register():
             if 'conn' in locals(): conn.close()
     
     return render_template('register.html')
-
     
 @app.route('/transactions', methods=['POST'])
 def add_transaction():
