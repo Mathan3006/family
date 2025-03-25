@@ -228,11 +228,11 @@ def show_transactions():
             return redirect(url_for('logout'))
 
         # Get transactions with proper error handling
-        transactions = execute_query(
+       transactions = execute_query(
     """SELECT 
-       id,              -- 0
-       date,            -- 1
-       amount,          -- 2
+       transaction_id,  -- 0
+       amount,          -- 1
+       date,            -- 2
        type,            -- 3
        income,          -- 4
        reason           -- 5
