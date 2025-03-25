@@ -152,42 +152,30 @@ def register():
         username = request.form['username']
         password = request.form['password']
         
-        if len(username) > 80:
-            flash('Username too long (max 80 chars)', 'error')
-            return redirect(url_for('register'))
-            
-        if len(password) < 8:
-            flash('Password must be at least 8 characters', 'error')
-            return redirect(url_for('register'))
-
         try:
-            # Check username exists
-            existing = execute_query(
-                "SELECT user_id FROM users WHERE username = %s",
-                (username,),
-                fetch=True
-            )
-            if existing:
-                flash('Username already exists', 'error')
-                return redirect(url_for('register'))
+            hashed_pw = generate_password_hash(password)  # <- Critical
+            conn = get_db_connection()
+            cur = conn.cursor()
             
-            # Insert new user
-            user_id = execute_query(
+            cur.execute(
                 "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING user_id",
-                (username, generate_password_hash(password)),
-                fetch=True
-            )[0][0]
+                (username, hashed_pw)  # <- Store hashed version
+            )
+            user_id = cur.fetchone()[0]
+            conn.commit()
             
-            # Auto-login after registration
             session['user_id'] = user_id
             flash('Registration successful!', 'success')
             return redirect(url_for('home'))
             
-        except Exception as e:
-            flash(f'Registration error: {str(e)}', 'error')
+        except IntegrityError:
+            flash('Username already exists', 'error')
+        finally:
+            if 'cur' in locals(): cur.close()
+            if 'conn' in locals(): conn.close()
     
     return render_template('register.html')
-
+    
 @app.route('/transactions', methods=['POST'])
 def add_transaction():
     if 'user_id' not in session:
