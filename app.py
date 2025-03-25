@@ -228,20 +228,20 @@ def show_transactions():
             return redirect(url_for('logout'))
 
         # Get transactions with proper error handling
-       transactions = execute_query(
-    """SELECT 
-       transaction_id,  -- 0
-       amount,          -- 1
-       date,            -- 2
-       type,            -- 3
-       income,          -- 4
-       reason           -- 5
-       FROM transactions 
-       WHERE user_id = %s 
-       ORDER BY date DESC""",
-    (session['user_id'],),
-    fetch=True
-)
+        transactions = execute_query(
+            """SELECT 
+               transaction_id,  -- 0
+               amount,          -- 1
+               date,            -- 2
+               type,            -- 3
+               income,          -- 4
+               reason           -- 5
+               FROM transactions 
+               WHERE user_id = %s 
+               ORDER BY date DESC""",
+            (session['user_id'],),
+            fetch=True
+        )
         
         print(f"Debug: Found {len(transactions)} transactions")  # Check console
         
@@ -253,7 +253,6 @@ def show_transactions():
         print(f"Error loading transactions: {str(e)}")
         flash('Failed to load transactions. Please try again.', 'error')
         return render_template('transactions.html', transactions=[])
-        
 
 @app.route('/delete/<int:transaction_id>')
 def delete_transaction(transaction_id):
