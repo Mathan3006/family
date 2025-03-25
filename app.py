@@ -224,12 +224,17 @@ def show_transactions():
             (session['user_id'],),
             fetch=True
         )
-        # Debug print to check what's being retrieved
-        print(f"Retrieved transactions: {transactions}")
-        return render_template('transactions.html', transactions=transactions)
+        print(f"DEBUG: Retrieved transactions: {transactions}")  # Debug print
+        
+        if not transactions:
+            flash('No transactions found', 'info')
+            
+        return render_template('transactions.html', 
+                            transactions=transactions or [])
+        
     except Exception as e:
-        print(f"Error retrieving transactions: {str(e)}")  # Debug print
-        flash('Failed to load transactions', 'error')
+        print(f"ERROR: Failed to load transactions: {str(e)}")  # Debug print
+        flash('Failed to load transactions. Please try again.', 'error')
         return render_template('transactions.html', transactions=[])
 
 @app.route('/delete/<int:transaction_id>')
