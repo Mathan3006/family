@@ -272,7 +272,24 @@ def health_check():
         }
     except Exception as e:
         return {'error': str(e)}, 500
-
+@app.route('/debug/transactions')
+def debug_transactions():
+    if 'user_id' not in session:
+        return {"error": "Not logged in"}, 401
+    
+    try:
+        transactions = execute_query(
+            "SELECT * FROM transactions WHERE user_id = %s ORDER BY date DESC",
+            (session['user_id'],),
+            fetch=True
+        )
+        return {
+            "status": "success",
+            "count": len(transactions),
+            "transactions": transactions
+        }
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 if __name__ == '__main__':
     init_db()
