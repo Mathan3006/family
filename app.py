@@ -10,12 +10,21 @@ app = Flask(__name__)
 app.secret_key = '3a6094cbe292ff1717ec6e11401673a8b8641daf2dd8821a2fab945f8ba49906'
 
 def get_db_connection():
-    """Safe database connection handler"""
+    """Safe database connection handler with Neon-specific adjustments"""
     max_retries = 3
     for attempt in range(max_retries):
         try:
+            # Get Neon connection URL from Railway variables
+            db_url = os.getenv('DATABASE_URL')
+            
+            # Force SSL for Neon (critical!)
+            
+            # Convert Heroku-style URL if needed
+            if db_url and db_url.startswith('postgres://'):
+                db_url = db_url.replace('postgres://', 'postgresql://', 1)
+            
             conn = psycopg2.connect(
-                os.getenv('DATABASE_URL').replace('postgres://', 'postgresql://'),
+                db_url,
                 connect_timeout=5
             )
             return conn
