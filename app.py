@@ -118,6 +118,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        print(f"Login attempt - Username: {username}, Password: {password}")  # Debug
         
         try:
             conn = get_db_connection()
@@ -130,7 +131,7 @@ def login():
             
             if user:
                 print(f"Stored hash: {user[1]}")  # Debug
-                print(f"Input password: {password}")  # Debug
+                print(f"Check result: {check_password_hash(user[1], password)}")  # Debug
                 if check_password_hash(user[1], password):
                     session['user_id'] = user[0]
                     return redirect(url_for('home'))
