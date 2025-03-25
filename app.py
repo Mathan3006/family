@@ -137,13 +137,15 @@ def login():
         
         try:
             user = execute_query(
-                "SELECT user_id, password FROM users WHERE username = %s",
+                "SELECT user_id, username, password FROM users WHERE username = %s",
                 (username,),
                 fetch=True
             )
             
-            if user and user[0][1] == password:
+            if user and user[0][2] == password:
                 session['user_id'] = user[0][0]
+                session['username'] = user[0][1]  # Store username
+                session['username_initial'] = user[0][1][0].upper()  # First letter
                 return redirect(url_for('home'))
             
             flash('Invalid username or password', 'error')
@@ -160,12 +162,14 @@ def register():
         password = request.form['password']
         
         try:
-            user_id = execute_query(
-                "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING user_id",
+            result = execute_query(
+                "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING user_id, username",
                 (username, password),
                 fetch=True
             )
-            session['user_id'] = user_id[0][0]
+            session['user_id'] = result[0][0]
+            session['username'] = result[0][1]  # Store username
+            session['username_initial'] = result[0][1][0].upper()  # First letter
             flash('Registration successful!', 'success')
             return redirect(url_for('home'))
         except IntegrityError:
@@ -174,6 +178,13 @@ def register():
             flash(f'Registration error: {str(e)}', 'error')
     
     return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('username', None)
+    session.pop('username_initial', None)
+    return redirect(url_for('login'))
 
 @app.route('/transactions', methods=['POST'])
 def add_transaction():
@@ -258,10 +269,6 @@ def health_check():
     except Exception as e:
         return {'error': str(e)}, 500
 
-@app.route('/logout')
-def logout():
-    session.pop('user_id', None)
-    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     init_db()
