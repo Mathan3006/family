@@ -154,30 +154,36 @@
                 </tr>
             </thead>
             <tbody>
-                {% for t in transactions %}
-                <tr>
-                    <td>{{ t[1].strftime('%Y-%m-%d %H:%M') if t[1] else 'N/A' }}</td>
-                    <td>{{ t[3]|capitalize }}</td>
-                    <td class="{{ 'text-green-600' if t[3] == 'income' else 'text-red-600' }}">
-                        ${{ "%.2f"|format(t[2]) }}
-                    </td>
-                    <td>
-                        {% if t[3] == 'income' %}
-                            Income: ${{ "%.2f"|format(t[4]) if t[4] else '0.00' }}
-                        {% else %}
-                            {{ t[5] or '-' }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
-                           onclick="return confirm('Are you sure?')"
-                           class="btn-danger">
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    {% for t in transactions %}
+    <tr>
+        <td>
+            {% if t[1] %}
+                {{ t[1].strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
+        <td>{{ (t[3] or 'expense')|capitalize }}</td>
+        <td class="{{ 'text-green-600' if (t[3] or '') == 'income' else 'text-red-600' }}">
+            ${{ "%.2f"|format(t[2] or 0) }}
+        </td>
+        <td>
+            {% if (t[3] or '') == 'income' %}
+                ${{ "%.2f"|format(t[4] or 0) }}
+            {% else %}
+                {{ t[5] or '-' }}
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
+               onclick="return confirm('Are you sure?')"
+               class="btn-danger">
+                Delete
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
         </table>
     </div>
     {% else %}
