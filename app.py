@@ -229,13 +229,19 @@ def show_transactions():
 
         # Get transactions with proper error handling
         transactions = execute_query(
-            """SELECT transaction_id, date, amount, type, income, reason 
-               FROM transactions 
-               WHERE user_id = %s 
-               ORDER BY date DESC""",
-            (session['user_id'],),
-            fetch=True
-        )
+    """SELECT 
+       id,              -- 0
+       date,            -- 1
+       amount,          -- 2
+       type,            -- 3
+       income,          -- 4
+       reason           -- 5
+       FROM transactions 
+       WHERE user_id = %s 
+       ORDER BY date DESC""",
+    (session['user_id'],),
+    fetch=True
+)
         
         print(f"Debug: Found {len(transactions)} transactions")  # Check console
         
