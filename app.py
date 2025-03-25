@@ -100,7 +100,6 @@ def home():
         return render_template('index.html')
     
     try:
-        # Get the username from database
         user = execute_query(
             "SELECT username FROM users WHERE user_id = %s",
             (session['user_id'],),
@@ -118,17 +117,17 @@ def home():
         )
         
         if user:
-            username = user[0][0]
             return render_template('index.html', 
-                                 transactions=transactions,
-                                 username=username)
+                                transactions=transactions,
+                                username=user[0][0],
+                                datetime=datetime)  # Pass datetime to template
         else:
             return render_template('index.html', transactions=[])
             
     except Exception as e:
         flash('Error loading recent transactions', 'error')
         return render_template('index.html', transactions=[])
-
+        
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
