@@ -302,7 +302,7 @@ def debug_transactions():
         }
     except Exception as e:
         return {"error": str(e)}, 500
-        @app.route('/check-transactions')
+@app.route('/check-transactions')
 def check_transactions():
     if 'user_id' not in session:
         return {"error": "Not logged in"}, 401
