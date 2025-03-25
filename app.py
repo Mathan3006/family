@@ -216,6 +216,18 @@ def show_transactions():
         return redirect(url_for('login'))
     
     try:
+        # Get username for display
+        user = execute_query(
+            "SELECT username FROM users WHERE user_id = %s",
+            (session['user_id'],),
+            fetch=True
+        )
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('logout'))
+
+        # Get transactions with proper error handling
         transactions = execute_query(
             """SELECT transaction_id, date, amount, type, income, reason 
                FROM transactions 
@@ -224,18 +236,18 @@ def show_transactions():
             (session['user_id'],),
             fetch=True
         )
-        print(f"DEBUG: Retrieved transactions: {transactions}")  # Debug print
         
-        if not transactions:
-            flash('No transactions found', 'info')
+        print(f"Debug: Found {len(transactions)} transactions")  # Check console
+        
+        return render_template('transactions.html',
+                            transactions=transactions,
+                            username=user[0][0])
             
-        return render_template('transactions.html', 
-                            transactions=transactions or [])
-        
     except Exception as e:
-        print(f"ERROR: Failed to load transactions: {str(e)}")  # Debug print
+        print(f"Error loading transactions: {str(e)}")
         flash('Failed to load transactions. Please try again.', 'error')
         return render_template('transactions.html', transactions=[])
+        
 
 @app.route('/delete/<int:transaction_id>')
 def delete_transaction(transaction_id):
@@ -287,6 +299,24 @@ def debug_transactions():
             "status": "success",
             "count": len(transactions),
             "transactions": transactions
+        }
+    except Exception as e:
+        return {"error": str(e)}, 500
+        @app.route('/check-transactions')
+def check_transactions():
+    if 'user_id' not in session:
+        return {"error": "Not logged in"}, 401
+    
+    try:
+        transactions = execute_query(
+            "SELECT * FROM transactions WHERE user_id = %s",
+            (session['user_id'],),
+            fetch=True
+        )
+        return {
+            "user_id": session['user_id'],
+            "transaction_count": len(transactions),
+            "sample_transaction": transactions[0] if transactions else None
         }
     except Exception as e:
         return {"error": str(e)}, 500
