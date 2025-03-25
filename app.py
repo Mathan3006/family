@@ -236,6 +236,12 @@ def delete_transaction(transaction_id):
         flash('Failed to delete transaction', 'error')
     
     return redirect(url_for('show_transactions'))
+@app.route('/check_session')
+def check_session():
+    return {
+        'user_id': session.get('user_id'),
+        'session': dict(session)
+    }
 
 @app.route('/logout')
 def logout():
