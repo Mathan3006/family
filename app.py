@@ -199,8 +199,11 @@ def show_transactions():
             (session['user_id'],),
             fetch=True
         )
+        # Debug print to check what's being retrieved
+        print(f"Retrieved transactions: {transactions}")
         return render_template('transactions.html', transactions=transactions)
     except Exception as e:
+        print(f"Error retrieving transactions: {str(e)}")  # Debug print
         flash('Failed to load transactions', 'error')
         return render_template('transactions.html', transactions=[])
 
