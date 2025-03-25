@@ -4,72 +4,52 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import time
 from datetime import datetime
-from psycopg2 import IntegrityError
 from urllib.parse import urlparse
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', '3a6094cbe292ff1717ec6e11401673a8b8641daf2dd8821a2fab945f8ba49906')
+app.secret_key = os.getenv('SECRET_KEY')
 
+# Enhanced Database Connection
 def get_db_connection():
-    """Enhanced database connection handler with Neon-specific optimizations"""
-    max_retries = 3
+    """Robust Neon PostgreSQL connection handler"""
+    max_retries = 5
+    db_url = os.getenv('DATABASE_URL')
+    
+    if not db_url:
+        raise ValueError("DATABASE_URL environment variable not set")
+    
+    # Force SSL and proper protocol for Neon
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if 'neon.tech' in db_url and 'sslmode' not in db_url:
+        db_url += '?sslmode=require'
+    
     for attempt in range(max_retries):
         try:
-            db_url = os.getenv('DATABASE_URL')
-            
-            # Validate and format the database URL
-            if not db_url:
-                raise ValueError("DATABASE_URL environment variable not set")
-            
-            # Parse and reconstruct URL to ensure proper formatting
-            parsed = urlparse(db_url)
-            
-            # Force SSL for Neon and convert protocol if needed
-            if 'neon.tech' in parsed.hostname:
-                if db_url.startswith('postgres://'):
-                    db_url = db_url.replace('postgres://', 'postgresql://', 1)
-                if 'sslmode' not in db_url:
-                    db_url += '?sslmode=require'
-            
             conn = psycopg2.connect(
                 db_url,
-                connect_timeout=5,
+                connect_timeout=10,
                 keepalives=1,
                 keepalives_idle=30,
                 keepalives_interval=10,
                 keepalives_count=5
             )
+            # Test connection immediately
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
             return conn
         except psycopg2.OperationalError as e:
             if attempt == max_retries - 1:
-                raise Exception(f"Failed to connect to database after {max_retries} attempts: {str(e)}")
-            time.sleep(1 + attempt)  # Exponential backoff
+                raise Exception(f"Database connection failed after {max_retries} attempts: {str(e)}")
+            time.sleep(2 ** attempt)  # Exponential backoff
 
-def execute_query(query, params=None, fetch=False):
-    """Safe query execution helper"""
-    conn = None
-    cur = None
+# Initialize Database (Neon-compatible)
+def init_db():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute(query, params or ())
-        if fetch:
-            return cur.fetchall()
-        conn.commit()
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise e
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-def init_db():
-    """Initialize database with proper error handling"""
-    try:
-        execute_query("""
+        
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id SERIAL PRIMARY KEY,
                 username VARCHAR(80) UNIQUE NOT NULL,
@@ -77,28 +57,41 @@ def init_db():
             )
         """)
         
-        execute_query("""
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 transaction_id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
                 date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 amount FLOAT NOT NULL,
-                type VARCHAR(10) NOT NULL CHECK (type IN ('income', 'expense')),
+                type VARCHAR(10) NOT NULL,
                 income FLOAT,
-                reason VARCHAR(100),
-                CONSTRAINT income_constraint CHECK (
-                    (type = 'income' AND income IS NOT NULL) OR
-                    (type = 'expense' AND income IS NULL)
+                reason VARCHAR(100)
             )
         """)
         
-        # Create indexes for better performance
-        execute_query("CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id)")
-        execute_query("CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)")
+        # Add indexes for performance
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)")
+        
+        conn.commit()
     except Exception as e:
-        print(f"Database initialization error: {e}")
+        print(f"Database init error: {e}")
         raise
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
 
+# Add this test route
+@app.route('/test-db')
+def test_db():
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT version()")
+            version = cur.fetchone()[0]
+        return f"Connected to PostgreSQL: {version}"
+    except Exception as e:
+        return f"Connection failed: {str(e)}", 500 
+        
 # Routes (maintaining all original functionality)
 @app.route('/')
 def home():
