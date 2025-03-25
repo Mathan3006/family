@@ -100,6 +100,13 @@ def home():
         return render_template('index.html')
     
     try:
+        # Get the username from database
+        user = execute_query(
+            "SELECT username FROM users WHERE user_id = %s",
+            (session['user_id'],),
+            fetch=True
+        )
+        
         transactions = execute_query(
             """SELECT date, amount, type, income, reason 
                FROM transactions 
@@ -109,7 +116,15 @@ def home():
             (session['user_id'],),
             fetch=True
         )
-        return render_template('index.html', transactions=transactions)
+        
+        if user:
+            username = user[0][0]
+            return render_template('index.html', 
+                                 transactions=transactions,
+                                 username=username)
+        else:
+            return render_template('index.html', transactions=[])
+            
     except Exception as e:
         flash('Error loading recent transactions', 'error')
         return render_template('index.html', transactions=[])
