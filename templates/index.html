@@ -25,6 +25,7 @@
         background-clip: text;
         color: transparent;
         display: inline-block;
+        animation: bounce 0.5s ease;
     }
     
     .nav-cards {
@@ -165,7 +166,17 @@
 </style>
 
 <div class="welcome-container">
-<h1 class="welcome-title">📩Welcome, {{ username }}📩</h1>
+<h1 class="welcome-title">
+    {% set current_hour = datetime.now().hour %}
+    {% if current_hour < 12 %}
+        Good morning,
+    {% elif current_hour < 18 %}
+        Good afternoon,
+    {% else %}
+        Good evening,
+    {% endif %}
+    {{ username }}!
+</h1>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
