@@ -120,20 +120,31 @@ def login():
         password = request.form['password']
         
         try:
-            user = execute_query(
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
                 "SELECT user_id, password FROM users WHERE username = %s",
-                (username,),
-                fetch=True
+                (username,)
             )
+            user = cur.fetchone()
             
-            if user and check_password_hash(user[0][1], password):
-                session['user_id'] = user[0][0]
-                return redirect(url_for('home'))
+            if user:
+                print(f"Stored hash: {user[1]}")  # Debug
+                print(f"Input password: {password}")  # Debug
+                if check_password_hash(user[1], password):
+                    session['user_id'] = user[0]
+                    return redirect(url_for('home'))
+            
             flash('Invalid username or password', 'error')
         except Exception as e:
+            print(f"Login error: {str(e)}")  # Debug
             flash('Login failed. Please try again.', 'error')
+        finally:
+            if 'cur' in locals(): cur.close()
+            if 'conn' in locals(): conn.close()
     
     return render_template('login.html')
+    
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
