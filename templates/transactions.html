@@ -154,30 +154,30 @@
             </tr>
         </thead>
         <tbody>
-            {% for t in transactions %}
-            <tr>
-                <td>{{ t[1].strftime('%Y-%m-%d %H:%M') if t[1] else 'N/A' }}</td>
-                <td>{{ t[3]|capitalize }}</td>
-                <td class="{{ 'text-green-600' if t[3] == 'income' else 'text-red-600' }}">
-                    ${{ "%.2f"|format(t[2]) }}
-                </td>
-                <td>
-                    {% if t[3] == 'income' %}
-                        Income: ${{ "%.2f"|format(t[4]) if t[4] else '0.00' }}
-                    {% else %}
-                        {{ t[5] or '-' }}
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
-                       onclick="return confirm('Are you sure?')"
-                       class="btn-danger">
-                        Delete
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+    {% for t in transactions %}
+    <tr>
+        <td>{{ t[3].strftime('%Y-%m-%d %H:%M') if t[3] else 'N/A' }}</td>  <!-- date -->
+        <td>{{ t[7]|capitalize }}</td>  <!-- type -->
+        <td class="{{ 'text-green-600' if t[7] == 'income' else 'text-red-600' }}">
+            ${{ "%.2f"|format(t[1]) }}  <!-- amount -->
+        </td>
+        <td>
+            {% if t[7] == 'income' %}  <!-- type -->
+                Income: ${{ "%.2f"|format(t[5]) if t[5] else '0.00' }}  <!-- income -->
+            {% else %}
+                {{ t[6] or '-' }}  <!-- reason -->
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ url_for('delete_transaction', transaction_id=t[4]) }}"  <!-- id -->
+               onclick="return confirm('Are you sure?')"
+               class="btn-danger">
+                Delete
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
     </table>
 </div>
 {% else %}
