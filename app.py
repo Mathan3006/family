@@ -192,23 +192,19 @@ def add_transaction():
 
     try:
         transaction_type = request.form['type']
-
-        # Validate amount
-        try:
-            amount = float(request.form['amount'])
-            if amount <= 0:
-                flash('Amount must be greater than 0', 'error')
-                return redirect(url_for('show_transactions'))
-        except ValueError:
-            flash('Please enter a valid positive number for amount', 'error')
+        amount = float(request.form['amount'])
+        if amount <= 0:
+            flash('Amount must be greater than 0', 'error')
             return redirect(url_for('show_transactions'))
 
-        # Handle income-specific fields
-        reason = request.form.get('reason', '').strip()
+        reason = request.form.get('reason', '').strip()  # Only for expenses
+        category = request.form.get('category', '').strip()  # Category input for expense transactions
+        
         if transaction_type == 'income':
-            reason = request.form.get('income', '').strip()  # Store income description in reason
+            reason = None  # Remove note for income transactions
+        else:
+            reason = category  # Store category in reason for expense transactions
 
-        # Insert into database
         execute_query(
             """INSERT INTO transactions 
                (user_id, amount, type, reason)
@@ -221,6 +217,7 @@ def add_transaction():
         flash(f'Failed to add transaction: {str(e)}', 'error')
 
     return redirect(url_for('show_transactions'))
+
 
 @app.route('/transactions')
 def show_transactions():
