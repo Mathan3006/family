@@ -247,25 +247,17 @@
                        placeholder="0.00" min="0.01" required>
             </div>
 
-            <div class="form-group hidden" id="income-field">
-                <div class="income-form-group">
-                    <label>Income Source*</label>
-                    <input type="text" name="income_source" class="form-control" 
-                           placeholder="Salary, Bonus, etc." required>
-                    <small class="text-gray-500">Describe where this income came from</small>
-                </div>
-                
-                <div class="income-form-group">
-                    <label>Income Category</label>
-                    <select name="income_category" class="form-control">
-                        <option value="">Select category</option>
-                        <option value="salary">Salary</option>
-                        <option value="bonus">Bonus</option>
-                        <option value="investment">Investment</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-            </div>
+            <!-- Replace the income source input with a category dropdown -->
+<div class="form-group hidden" id="income-field">
+    <label>Income Category</label>
+    <select name="income" class="form-control">
+        <option value="Salary">Salary</option>
+        <option value="Bonus">Bonus</option>
+        <option value="Investment">Investment</option>
+        <option value="Freelance">Freelance</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
 
             <div class="form-group">
                 <label>Notes (Optional)</label>
