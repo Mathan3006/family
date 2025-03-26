@@ -185,6 +185,30 @@ def logout():
     session.pop('username_initial', None)
     return redirect(url_for('login'))
 
+@app.route('/transactions', methods=['POST'])
+def add_transaction():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        transaction_type = request.form['type']
+        amount = float(request.form['amount'])
+        income = float(request.form['income']) if transaction_type == 'income' else None
+        reason = request.form.get('reason')
+
+        execute_query(
+            """INSERT INTO transactions 
+               (user_id, amount, type, income, reason)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (session['user_id'], amount, transaction_type, income, reason)
+        )
+        flash('Transaction added successfully!', 'success')
+    except ValueError:
+        flash('Invalid amount entered', 'error')
+    except Exception as e:
+        flash(f'Failed to add transaction: {str(e)}', 'error')
+    
+    return redirect(url_for('show_transactions'))
 
 @app.route('/transactions')
 def show_transactions():
@@ -192,6 +216,17 @@ def show_transactions():
         return redirect(url_for('login'))
     
     try:
+        # Get username for display
+        user = execute_query(
+            "SELECT username FROM users WHERE user_id = %s",
+            (session['user_id'],),
+            fetch=True
+        )
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('logout'))
+
         # Get transactions with proper error handling
         transactions = execute_query(
             """SELECT 
@@ -208,50 +243,16 @@ def show_transactions():
             fetch=True
         )
         
-        # Debug output
-        print(f"Transaction data: {transactions}")
+        print(f"Debug: Found {len(transactions)} transactions")  # Check console
         
         return render_template('transactions.html',
                             transactions=transactions,
-                            username=session.get('username', ''))
+                            username=user[0][0])
             
     except Exception as e:
         print(f"Error loading transactions: {str(e)}")
         flash('Failed to load transactions. Please try again.', 'error')
         return render_template('transactions.html', transactions=[])
-
-@app.route('/add-transaction', methods=['POST'])
-def add_transaction():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    try:
-        transaction_type = request.form.get('type')
-        amount = float(request.form.get('amount', 0))
-        income = request.form.get('income')
-        reason = request.form.get('reason')
-
-        # Validate required fields
-        if not transaction_type or not amount:
-            flash('Type and amount are required', 'error')
-            return redirect(url_for('show_transactions'))
-
-        # Convert income to float if it exists and transaction is income
-        income_value = float(income) if income and transaction_type == 'income' else None
-
-        execute_query(
-            """INSERT INTO transactions 
-               (user_id, amount, type, income, reason)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (session['user_id'], amount, transaction_type, income_value, reason)
-        )
-        flash('Transaction added successfully!', 'success')
-    except ValueError:
-        flash('Invalid amount entered', 'error')
-    except Exception as e:
-        flash(f'Failed to add transaction: {str(e)}', 'error')
-    
-    return redirect(url_for('show_transactions'))
 
 @app.route('/delete/<int:id>')
 def delete_transaction(id):
