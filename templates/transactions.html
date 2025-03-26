@@ -12,7 +12,39 @@
         margin: 0 auto;
         padding: 2rem;
     }
+    .income-highlight {
+        background-color: rgba(16, 185, 129, 0.1);
+        border-left: 4px solid #10b981;
+    }
     
+    .income-source {
+        font-weight: 600;
+        color: #047857;
+    }
+    
+    .income-amount {
+        font-size: 1.1rem;
+        position: relative;
+    }
+    
+    .income-amount::before {
+        content: "+";
+        position: absolute;
+        left: -15px;
+    }
+    
+    /* Enhanced form styling for income fields */
+    .income-form-group {
+        background-color: #f0fdf4;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #d1fae5;
+    }
+    
+    .income-form-group label {
+        color: #065f46;
+    }
     .transaction-table {
         width: 100%;
         border-collapse: separate;
@@ -211,23 +243,37 @@
 
             <div class="form-group">
                 <label>Amount*</label>
-                <input type="number" step="0.01" name="amount" class="form-control" placeholder="0.00" required>
+                <input type="number" step="0.01" name="amount" class="form-control" 
+                       placeholder="0.00" min="0.01" required>
             </div>
 
             <div class="form-group hidden" id="income-field">
-                <label>Income Source</label>
-                <input type="text" name="income" class="form-control" placeholder="Salary, Bonus, etc.">
+                <div class="income-form-group">
+                    <label>Income Source*</label>
+                    <input type="text" name="income_source" class="form-control" 
+                           placeholder="Salary, Bonus, etc." required>
+                    <small class="text-gray-500">Describe where this income came from</small>
+                </div>
+                
+                <div class="income-form-group">
+                    <label>Income Category</label>
+                    <select name="income_category" class="form-control">
+                        <option value="">Select category</option>
+                        <option value="salary">Salary</option>
+                        <option value="bonus">Bonus</option>
+                        <option value="investment">Investment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Reason (Optional)</label>
-                <input type="text" name="reason" class="form-control" placeholder="What was this for?">
+                <label>Notes (Optional)</label>
+                <textarea name="notes" class="form-control" rows="2" 
+                          placeholder="Additional details about this transaction"></textarea>
             </div>
 
             <button type="submit" class="submit-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
                 Add Transaction
             </button>
         </form>
@@ -235,32 +281,17 @@
 </div>
 
 <script>
-    // Enhanced type selector with animation
-    const typeSelector = document.getElementById('type-selector');
-    const incomeField = document.getElementById('income-field');
-    
-    typeSelector.addEventListener('change', function() {
-        const isIncome = this.value === 'income';
-        
-        if (isIncome) {
+    // Enhanced type selector with income-specific handling
+    document.getElementById('type-selector').addEventListener('change', function() {
+        const incomeField = document.getElementById('income-field');
+        if (this.value === 'income') {
             incomeField.classList.remove('hidden');
-            incomeField.style.display = 'block';
-            incomeField.animate([
-                { opacity: 0, height: 0 },
-                { opacity: 1, height: 'auto' }
-            ], { duration: 300, easing: 'ease-out' });
+            // Highlight income fields
+            incomeField.querySelectorAll('input, select').forEach(el => {
+                el.style.borderColor = '#10b981';
+            });
         } else {
-            incomeField.animate([
-                { opacity: 1, height: 'auto' },
-                { opacity: 0, height: 0 }
-            ], { 
-                duration: 300, 
-                easing: 'ease-out',
-                fill: 'forwards'
-            }).onfinish = () => {
-                incomeField.classList.add('hidden');
-                incomeField.style.display = 'none';
-            };
+            incomeField.classList.add('hidden');
         }
     });
 </script>
