@@ -148,33 +148,32 @@
         </a>
     </div>
 
-    {% if transactions %}
-    <div class="overflow-x-auto">
-        <table class="transaction-table">
-            <thead>
-                <tr>
-                    <th class="rounded-tl-lg">Date</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Details</th>
-                    <th class="rounded-tr-lg">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for t in transactions %}
-                <tr class="hover:bg-gray-50 transition">
-                    <td>{{ t[2].strftime('%b %d, %Y %I:%M %p') if t[2] else 'N/A' }}</td>
-                    <td class="font-medium">{{ t[3]|capitalize }}</td>
-                    <td class="{{ 'text-green' if t[3] == 'income' else 'text-red' }}">
-                        ${{ "%.2f"|format(t[1]) }}
-                    </td>
-                    <td>
-                        {% if t[3] == 'income' %}
-                            Source: {{ t[4] if t[4] else 'Not specified' }}
-                        {% else %}
-                            {{ t[5] or 'No reason provided' }}
-                        {% endif %}
-                    </td>
+   {% if transactions %}
+    <table class="transaction-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Details</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t[2].strftime('%Y-%m-%d %H:%M') if t[2] else 'N/A' }}</td>
+                <td>{{ t[3]|capitalize }}</td>
+                <td class="{{ 'income' if t[3] == 'income' else 'expense' }}">
+                    ${{ "%.2f"|format(t[1]) }}
+                </td>
+                <td>
+                    {% if t[3] == 'income' %}
+                        From: {{ t[4] if t[4] else 'Not specified' }}
+                    {% else %}
+                        For: {{ t[5] if t[5] else 'Not specified' }}
+                    {% endif %}
+                </td>
                     <td>
                         <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
                            onclick="return confirm('Are you sure you want to delete this transaction?')"
