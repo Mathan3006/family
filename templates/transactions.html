@@ -141,20 +141,6 @@
 
 <div class="transactions-container">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Your Transactions</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages mb-6">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} p-4 rounded-lg mb-4 flex justify-between items-center">
-                        <span>{{ message }}</span>
-                        <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" 
-                                class="text-xl hover:text-gray-700 transition">×</button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
 
     <div class="transaction-actions mb-6">
         <a href="{{ url_for('home') }}" class="btn bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg">
