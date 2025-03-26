@@ -192,19 +192,49 @@ def add_transaction():
 
     try:
         transaction_type = request.form['type']
-        amount = float(request.form['amount'])
-        income = float(request.form['income']) if transaction_type == 'income' else None
-        reason = request.form.get('reason')
+        
+        # Validate amount
+        try:
+            amount = float(request.form['amount'])
+            if amount <= 0:
+                flash('Amount must be greater than 0', 'error')
+                return redirect(url_for('show_transactions'))
+        except ValueError:
+            flash('Please enter a valid positive number for amount', 'error')
+            return redirect(url_for('show_transactions'))
+        
+        # Handle income-specific fields
+        income_source = None
+        if transaction_type == 'income':
+            income_source = request.form.get('income', '').strip()
+            if not income_source:
+                flash('Income source is required for income transactions', 'error')
+                return redirect(url_for('show_transactions'))
+            
+            # Additional income validation if needed
+            try:
+                if len(income_source) > 100:
+                    flash('Income source description too long (max 100 chars)', 'error')
+                    return redirect(url_for('show_transactions'))
+            except Exception as e:
+                flash('Invalid income source format', 'error')
+                return redirect(url_for('show_transactions'))
+        
+        reason = request.form.get('reason', '').strip()
 
+        # Insert into database with proper NULL handling
         execute_query(
             """INSERT INTO transactions 
                (user_id, amount, type, income, reason)
                VALUES (%s, %s, %s, %s, %s)""",
-            (session['user_id'], amount, transaction_type, income, reason)
+            (session['user_id'], 
+             amount, 
+             transaction_type, 
+             income_source if transaction_type == 'income' else None,
+             reason if reason else None)
         )
+        
         flash('Transaction added successfully!', 'success')
-    except ValueError:
-        flash('Invalid amount entered', 'error')
     except Exception as e:
         flash(f'Failed to add transaction: {str(e)}', 'error')
     
@@ -227,32 +257,51 @@ def show_transactions():
             flash('User not found', 'error')
             return redirect(url_for('logout'))
 
-        # Get transactions with proper error handling
+        # Get transactions with income/expense separation
         transactions = execute_query(
             """SELECT 
                transaction_id,  -- 0
                amount,          -- 1
                date,            -- 2
                type,            -- 3
-               income,          -- 4
-               reason           -- 5
+               income,          -- 4 (source for income)
+               reason          -- 5
                FROM transactions 
                WHERE user_id = %s 
-               ORDER BY date DESC""",
+               ORDER BY 
+                   CASE WHEN type = 'income' THEN 0 ELSE 1 END,
+                   date DESC""",
             (session['user_id'],),
             fetch=True
         )
         
-        print(f"Debug: Found {len(transactions)} transactions")  # Check console
+        # Calculate income statistics
+        income_stats = execute_query(
+            """SELECT 
+                  COUNT(*) as count,
+                  SUM(amount) as total,
+                  AVG(amount) as average
+               FROM transactions 
+               WHERE user_id = %s AND type = 'income'""",
+            (session['user_id'],),
+            fetch=True
+        )
         
         return render_template('transactions.html',
                             transactions=transactions,
-                            username=user[0][0])
+                            username=user[0][0],
+                            income_stats={
+                                'count': income_stats[0][0] if income_stats else 0,
+                                'total': income_stats[0][1] if income_stats and income_stats[0][1] else 0,
+                                'average': income_stats[0][2] if income_stats and income_stats[0][2] else 0
+                            })
             
     except Exception as e:
         print(f"Error loading transactions: {str(e)}")
         flash('Failed to load transactions. Please try again.', 'error')
-        return render_template('transactions.html', transactions=[])
+        return render_template('transactions.html', 
+                             transactions=[],
+                             income_stats={'count': 0, 'total': 0, 'average': 0})
 
 @app.route('/delete/<int:transaction_id>')
 def delete_transaction(transaction_id):
@@ -260,15 +309,28 @@ def delete_transaction(transaction_id):
         return redirect(url_for('login'))
     
     try:
+        # First verify the transaction belongs to the user
+        transaction = execute_query(
+            "SELECT type, amount FROM transactions WHERE transaction_id = %s AND user_id = %s",
+            (transaction_id, session['user_id']),
+            fetch=True
+        )
+        
+        if not transaction:
+            flash('Transaction not found', 'error')
+            return redirect(url_for('show_transactions'))
+        
         execute_query(
             "DELETE FROM transactions WHERE transaction_id = %s AND user_id = %s",
-            (id, session['user_id'])
+            (transaction_id, session['user_id'])
         )
-        flash('Transaction deleted successfully!', 'success')
+        
+        flash(f"Successfully deleted {transaction[0][0]} of ${transaction[0][1]:.2f}", 'success')
     except Exception as e:
         flash('Failed to delete transaction', 'error')
     
     return redirect(url_for('show_transactions'))
+    
 
 @app.route('/check_session')
 def check_session():
