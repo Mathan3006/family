@@ -12,12 +12,13 @@
         margin: 0 auto;
         padding: 2rem;
     }
+    
     .income-highlight {
         background-color: rgba(16, 185, 129, 0.1);
         border-left: 4px solid #10b981;
     }
     
-    .income-source {
+    .income-category {
         font-weight: 600;
         color: #047857;
     }
@@ -33,18 +34,6 @@
         left: -15px;
     }
     
-    /* Enhanced form styling for income fields */
-    .income-form-group {
-        background-color: #f0fdf4;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        border: 1px solid #d1fae5;
-    }
-    
-    .income-form-group label {
-        color: #065f46;
-    }
     .transaction-table {
         width: 100%;
         border-collapse: separate;
@@ -169,6 +158,16 @@
     .submit-btn:hover {
         transform: translateY(-2px);
     }
+    
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background-color: #d1fae5;
+        color: #065f46;
+    }
 </style>
 
 <div class="transactions-container">
@@ -180,7 +179,7 @@
         </a>
     </div>
 
-   {% if transactions %}
+    {% if transactions %}
     <table class="transaction-table">
         <thead>
             <tr>
@@ -193,37 +192,35 @@
         </thead>
         <tbody>
             {% for t in transactions %}
-            <tr>
+            <tr class="{% if t[3] == 'income' %}income-highlight{% endif %}">
                 <td>{{ t[2].strftime('%Y-%m-%d %H:%M') if t[2] else 'N/A' }}</td>
                 <td>{{ t[3]|capitalize }}</td>
-                <td class="{{ 'income' if t[3] == 'income' else 'expense' }}">
+                <td class="{{ 'income-amount text-green' if t[3] == 'income' else 'text-red' }}">
                     ${{ "%.2f"|format(t[1]) }}
                 </td>
                 <td>
                     {% if t[3] == 'income' %}
-                        From: {{ t[4] if t[4] else 'Not specified' }}
+                        <span class="category-badge">{{ t[4] if t[4] else 'Uncategorized' }}</span>
                     {% else %}
-                        For: {{ t[5] if t[5] else 'Not specified' }}
+                        {{ t[5] if t[5] else 'Not specified' }}
                     {% endif %}
                 </td>
-                    <td>
-                        <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
-                           onclick="return confirm('Are you sure you want to delete this transaction?')"
-                           class="btn-danger inline-flex items-center px-3 py-1.5 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                <td>
+                    <a href="{{ url_for('delete_transaction', transaction_id=t[0]) }}" 
+                       onclick="return confirm('Are you sure you want to delete this transaction?')"
+                       class="btn-danger inline-flex items-center px-3 py-1.5 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
     <div class="empty-state">
-       
         <p class="text-xl font-medium text-gray-700">💔 No transactions found 💔</p>
         <p class="text-gray-500">Add your first transaction below</p>
     </div>
@@ -247,17 +244,17 @@
                        placeholder="0.00" min="0.01" required>
             </div>
 
-            <!-- Replace the income source input with a category dropdown -->
-<div class="form-group hidden" id="income-field">
-    <label>Income Category</label>
-    <select name="income" class="form-control">
-        <option value="Salary">Salary</option>
-        <option value="Bonus">Bonus</option>
-        <option value="Investment">Investment</option>
-        <option value="Freelance">Freelance</option>
-        <option value="Other">Other</option>
-    </select>
-</div>
+            <div class="form-group hidden" id="income-field">
+                <label>Income Category</label>
+                <select name="income" class="form-control">
+                    <option value="Salary">Salary</option>
+                    <option value="Bonus">Bonus</option>
+                    <option value="Investment">Investment</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Gift">Gift</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
             <div class="form-group">
                 <label>Notes (Optional)</label>
@@ -273,15 +270,10 @@
 </div>
 
 <script>
-    // Enhanced type selector with income-specific handling
     document.getElementById('type-selector').addEventListener('change', function() {
         const incomeField = document.getElementById('income-field');
         if (this.value === 'income') {
             incomeField.classList.remove('hidden');
-            // Highlight income fields
-            incomeField.querySelectorAll('input, select').forEach(el => {
-                el.style.borderColor = '#10b981';
-            });
         } else {
             incomeField.classList.add('hidden');
         }
