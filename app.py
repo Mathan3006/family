@@ -192,7 +192,7 @@ def add_transaction():
 
     try:
         transaction_type = request.form['type']
-        
+
         # Validate amount
         try:
             amount = float(request.form['amount'])
@@ -202,42 +202,24 @@ def add_transaction():
         except ValueError:
             flash('Please enter a valid positive number for amount', 'error')
             return redirect(url_for('show_transactions'))
-        
-        # Handle income-specific fields
-        income_source = None
-        if transaction_type == 'income':
-            income_source = request.form.get('income', '').strip()
-            if not income_source:
-                flash('Income source is required for income transactions', 'error')
-                return redirect(url_for('show_transactions'))
-            
-            # Additional income validation if needed
-            try:
-                if len(income_source) > 100:
-                    flash('Income source description too long (max 100 chars)', 'error')
-                    return redirect(url_for('show_transactions'))
-            except Exception as e:
-                flash('Invalid income source format', 'error')
-                return redirect(url_for('show_transactions'))
-        
-        reason = request.form.get('reason', '').strip()
 
-        # Insert into database with proper NULL handling
+        # Handle income-specific fields
+        reason = request.form.get('reason', '').strip()
+        if transaction_type == 'income':
+            reason = request.form.get('income', '').strip()  # Store income description in reason
+
+        # Insert into database
         execute_query(
             """INSERT INTO transactions 
-               (user_id, amount, type, income, reason)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (session['user_id'], 
-             amount, 
-             transaction_type, 
-             income_source if transaction_type == 'income' else None,
-             reason if reason else None)
+               (user_id, amount, type, reason)
+               VALUES (%s, %s, %s, %s)""",
+            (session['user_id'], amount, transaction_type, reason if reason else None)
         )
-        
+
         flash('Transaction added successfully!', 'success')
     except Exception as e:
         flash(f'Failed to add transaction: {str(e)}', 'error')
-    
+
     return redirect(url_for('show_transactions'))
 
 @app.route('/transactions')
