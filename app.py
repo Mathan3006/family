@@ -230,7 +230,7 @@ def show_transactions():
         # Get transactions with proper error handling
         transactions = execute_query(
             """SELECT 
-               id,  -- 0
+               transaction_id,  -- 0
                amount,          -- 1
                date,            -- 2
                type,            -- 3
@@ -254,14 +254,14 @@ def show_transactions():
         flash('Failed to load transactions. Please try again.', 'error')
         return render_template('transactions.html', transactions=[])
 
-@app.route('/delete/<int:id>')
-def delete_transaction(id):
+@app.route('/delete/<int:transaction_id>')
+def delete_transaction(transaction_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     try:
         execute_query(
-            "DELETE FROM transactions WHERE id = %s AND user_id = %s",
+            "DELETE FROM transactions WHERE transaction_id = %s AND user_id = %s",
             (id, session['user_id'])
         )
         flash('Transaction deleted successfully!', 'success')
