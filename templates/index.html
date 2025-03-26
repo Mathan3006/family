@@ -7,6 +7,11 @@
         100% { transform: translateY(0px); }
     }
     
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
     .welcome-container {
         max-width: 800px;
         margin: 0 auto;
@@ -18,7 +23,6 @@
     .welcome-title {
         font-size: 2.5rem;
         font-weight: 800;
-        color: #1e293b;
         margin-bottom: 2rem;
         background: linear-gradient(90deg, #6366f1, #8b5cf6);
         -webkit-background-clip: text;
@@ -90,6 +94,11 @@
     .nav-card:nth-child(3) .card-icon {
         animation-delay: 0.3s;
         color: #f59e0b;
+    }
+    
+    .nav-card:nth-child(4) .card-icon {
+        animation-delay: 0.4s;
+        color: #ec4899;
     }
     
     .nav-card h3 {
@@ -166,10 +175,9 @@
 </style>
 
 <div class="welcome-container">
-<h1 class="welcome-title">
-    🙏 Welcome
-    {{ username }} 🙏
-</h1>
+    <h1 class="welcome-title">
+        🙏 Welcome {{ username }} 🙏
+    </h1>
     
     <div class="nav-cards">
         <a href="{{ url_for('show_transactions') }}" class="nav-card">
@@ -207,12 +215,11 @@
             <p>Securely sign out of your account</p>
         </a>
 
-        <a href="{{ url_for('logout') }}" class="nav-card">
+        <a href="#" class="nav-card">
             <div class="card-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                 </svg>
             </div>
             <h3>Creator</h3>
