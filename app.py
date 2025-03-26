@@ -195,7 +195,7 @@ def show_transactions():
         # Get transactions with proper error handling
         transactions = execute_query(
             """SELECT 
-               transaction_id,  -- 0
+               id,  -- 0
                amount,          -- 1
                date,            -- 2
                type,            -- 3
@@ -253,15 +253,15 @@ def add_transaction():
     
     return redirect(url_for('show_transactions'))
 
-@app.route('/delete/<int:transaction_id>')
-def delete_transaction(transaction_id):
+@app.route('/delete/<int:id>')
+def delete_transaction(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     try:
         execute_query(
-            "DELETE FROM transactions WHERE transaction_id = %s AND user_id = %s",
-            (transaction_id, session['user_id'])
+            "DELETE FROM transactions WHERE id = %s AND user_id = %s",
+            (id, session['user_id'])
         )
         flash('Transaction deleted successfully!', 'success')
     except Exception as e:
